@@ -1,144 +1,91 @@
-import React, { Component } from 'react'
+import React, { useEffect, useState } from 'react'
 import NewsItem from './NewsItem'
 import Spinner from './Spinner';
 import PropTypes from 'prop-types'
 import InfiniteScroll from "react-infinite-scroll-component";
 
-export class News extends Component {
-    static propTypes = {
-        country: PropTypes.string,
-        pageSize: PropTypes.number,
-        category: PropTypes.string,
-    }
-    articles = [
-        {
-            "source": {
-                "id": null,
-                "name": "News18"
-            },
-            "author": "Mohammad Haris",
-            "title": "FPIs Cautious on Equities; Take Out Rs 3,776 Crore in February So Far on Spike in US Bond Yields - News18",
-            "description": "Foreign Portfolio Investors (FPIs) pull out a net sum of Rs 3,776 crore from the Indian equities this month (till February 16)",
-            "url": "https://www.news18.com/business/fpis-cautious-on-equities-take-out-rs-3776-crore-in-february-so-far-on-spike-in-us-bond-yields-8783749.html",
-            "urlToImage": "https://images.news18.com/ibnlive/uploads/2023/09/image-1200x900-48-169502325116x9.png",
-            "publishedAt": "2024-02-18T09:40:44Z",
-            "content": "Foreign investors adopted a cautious approach offloading Indian equities worth close to Rs 3,776 crore so far this month owing to a spike in the US bond yields and uncertainty over the interest rate … [+2506 chars]"
-        },
-        {
-            "source": {
-                "id": null,
-                "name": "News18"
-            },
-            "author": "Mohammad Haris",
-            "title": "Gold Rate Falls Today In India: Check 24 Carat Gold Price In Your City On February 18 - News18",
-            "description": "Gold rate today in India: On February 18, there were fall in retail gold prices across various cities in spot market",
-            "url": "https://www.news18.com/business/gold-rate-falls-today-in-india-check-24-carat-gold-price-in-your-city-on-february-18-8783649.html",
-            "urlToImage": "https://images.news18.com/ibnlive/uploads/2023/10/untitled-design-8-2023-10-2570de316084e89c2406b18d471deb3f-16x9.jpg?impolicy=website&width=1200&height=675",
-            "publishedAt": "2024-02-18T08:11:05Z",
-            "content": "Gold Rate Today In India: As of February 18, 2024, gold prices remained unchanged in India. The average rate for 10 grams remained around Rs 62,400. To provide a broader perspective, the average pric… [+2346 chars]"
-        },
-        {
-            "source": {
-                "id": null,
-                "name": "Moneycontrol"
-            },
-            "author": "Mansi Verma",
-            "title": "UPI would not have been built if not for Mumbai: NPCI’s Dilip Asbe - Moneycontrol",
-            "description": "This comes at a time when entrepreneurs in the financial capital of the country are uniting together to boost and promote the tech ecosystem in the city.",
-            "url": "https://www.moneycontrol.com/news/technology/upi-would-not-have-been-built-if-not-for-mumbai-npcis-dilip-asbe-12297261.html",
-            "urlToImage": "https://images.moneycontrol.com/static-mcnews/2018/08/Dilip-Asbe_NPCI_COO-653x435-770x432.jpg",
-            "publishedAt": "2024-02-18T08:02:20Z",
-            "content": "The Unified Payment Interface (UPI) could not have been built if the National Payments Corporation of India (NPCI) had not built the product out of Mumbai, according to Dilip Asbe, managing director … [+1919 chars]"
-        },
-        {
-            "source": {
-                "id": null,
-                "name": "Livemint"
-            },
-            "author": "Livemint",
-            "title": "Regulator directs 7 airlines to ensure on-time luggage delivery at airports - Mint",
-            "description": "BCAS has directed major airlines to streamline baggage handling procedures to ensure timely delivery of customer baggage, following concerns of punctuality and complaints",
-            "url": "https://www.livemint.com/news/bcas-directs-air-india-indigo-spicejet-vistara-air-india-express-akasa-to-ensure-on-time-delivery-of-baggage-at-airport-11708237165117.html",
-            "urlToImage": "https://www.livemint.com/lm-img/img/2024/02/18/1600x900/2-0-1469492915-28AirportFog5-0_1679923828308_1708237889433.jpg",
-            "publishedAt": "2024-02-18T07:25:51Z",
-            "content": "The Bureau of Civil Aviation Security (BCAS) has directed initiative to streamline baggage handling procedures across major airlines operating in the country. In a letter issued to seven prominent ai… [+2997 chars]"
-        }]
+const News = (props) => {
+    const [articles, setArticles] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [page, setPage] = useState(1);
+    const [totalResults, setTotalResults] = useState(0);
 
-    capitalizeFirstLetter = (string) => {
+     const capitalizeFirstLetter = (string) => {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            articles: [],
-            loading: false,
-            page: 1,
-            totalResults: 0
-        }
-        document.title = `${this.capitalizeFirstLetter(this.props.category)} - NewsMonkey`
-    }
-
-    async updateNews() {
-        this.props.setProgress(10)
-        const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${this.state.page}&pageSize=${this.props.pageSize}`;
-        this.setState({ loading: true });
-        this.props.setProgress(30)
+    const updateNews = async () => {
+        props.setProgress(10)
+        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page}&pageSize=${props.pageSize}`;
+        setLoading( true )
+        props.setProgress(30)
         let data = await fetch(url);
         let parsedData = await data.json();
-        console.log(parsedData);
-        this.setState({ articles: parsedData.articles, totalResults: parsedData.totalResults, loading: false })
-        this.props.setProgress(100)
-
-    }
-    async componentDidMount() {
-        this.updateNews();
+        props.setProgress(70)
+        setArticles(parsedData.articles)
+        setTotalResults(parsedData.totalResults)
+        setLoading(false)
+        props.setProgress(100)
     }
 
-     fetchMoreData = async () => {
-        this.setState({ page: this.state.page + 1 })
-        const url = `https://newsapi.org/v2/top-headlines?country=${this.props.country}&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${this.state.page}&pageSize=${this.props.pageSize}`;
+    useEffect(() => {
+        document.title = `${capitalizeFirstLetter(props.category)} - NewsMonkey`;
+        updateNews();
+        // eslint-disable-next-line
+    }, [])
+
+    const fetchMoreData = async () => {
+        
+        const url = `https://newsapi.org/v2/top-headlines?country=${props.country}&category=${props.category}&apiKey=${props.apiKey}&page=${page+1}&pageSize=${props.pageSize}`;
+        setPage(page + 1)
         let data = await fetch(url);
         let parsedData = await data.json();
-        console.log(parsedData);
-        this.setState(
-            {
-                articles: this.state.articles.concat(parsedData.articles),
-                totalResults: parsedData.totalResults,
-            })
+        setArticles(articles.concat(parsedData.articles))
+        setTotalResults( parsedData.totalResults)
     };
 
+    return (
+        <>
+            <h1 className='text-center' style={{ margin: '35px 0', marginTop: '90px' }}>NewsMonkey - Top {capitalizeFirstLetter(props.category)} Headlines</h1>
+            {loading && <Spinner />}
 
-    render() {
-        return (
-            <>
-                <h1 className='text-center' style={{ margin: '35px 0' }}>NewsMonkey - Top {this.capitalizeFirstLetter(this.props.category)} Headlines</h1>
-                {this.state.loading && <Spinner/>}
+            <InfiniteScroll
+                dataLength={articles.length}
+                next={fetchMoreData}
+                hasMore={articles.length !== totalResults}
+                loader={<Spinner></Spinner>}
+            >
+                <div className="container">
 
-                <InfiniteScroll
-                    dataLength={this.state.articles.length}
-                    next={this.fetchMoreData}
-                    hasMore={this.state.articles.length !== this.state.totalResults}
-                    loader={<Spinner></Spinner>}
-                >
-                    <div className="container">
+                    <div className='row'>
+                        {articles.map((element) => {
+                            return <div className='col-md-4' key={element.url}>
+                                <NewsItem title={element.title} description={element.description ? element.description.slice(0, 88) : ''} imageUrl={element.urlToImage} newsUrl={element.url} author={element.author} date={element.publishedAt}
+                                    source={element.source.name}
+                                />
 
-                        <div className='row'>
-                            {this.state.articles.map((element) => {
-                                return <div className='col-md-4' key={element.url}>
-                                    <NewsItem title={element.title} description={element.description ? element.description.slice(0, 88) : ''} imageUrl={element.urlToImage} newsUrl={element.url} author={element.author} date={element.publishedAt}
-                                        source={element.source.name}
-                                    />
+                            </div>
+                        })}
 
-                                </div>
-                            })}
-
-                        </div>
                     </div>
-                </InfiniteScroll>
-            </>
-        )
-    }
+                </div>
+            </InfiniteScroll>
+        </>
+    )
+}
+
+
+News.defaultProps = {
+    country: 'in',
+    pageSize: 8,
+    category: 'general'
+
+}
+News.propTypes = {
+    country: PropTypes.string,
+    pageSize: PropTypes.number,
+    category: PropTypes.string,
 }
 
 export default News
+
